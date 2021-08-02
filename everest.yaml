@@ -1,0 +1,6 @@
+﻿- Name: FrogHelper
+  Version: 0.0.1
+  DLL: FrogHelper/bin/Debug/FrogHelper.dll
+  Dependencies:
+    - Name: Everest
+      Version: 1.0.0
