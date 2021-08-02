@@ -16,20 +16,27 @@ namespace FrogHelper.Entities {
     /// <summary>
     /// A silver strawberry that appears only when certain conditions are met, and does not require deathless completion.
     /// </summary>
-    [CustomEntity("FrogHelper/FrogelineWingedSilver")]
+    [CustomEntity("FrogHelper/WingedSilver")]
     [RegisterStrawberry(tracked: false, blocksCollection: false)]
-    public class FrogelineWingedSilver : Strawberry {
+    public class WingedSilver : Strawberry {
 
         /// <summary>
         /// One of: "dashless", "noExtraJumps"
         /// </summary>
         protected string Condition;
-        protected bool flyingAway = false;
+		protected Vector2 start;
+		protected bool flyingAway = false;
+        protected float flapSpeed = 0f;
 
-        public FrogelineWingedSilver(EntityData data, Vector2 offset, EntityID gid) : base(data, offset, gid) {
+        protected bool uncollected = true;
+
+        public WingedSilver(EntityData data, Vector2 offset, EntityID gid) : base(data, offset, gid) {
             new DynData<Strawberry>(this)["Golden"] = true;
             Condition = data.Attr("condition");
 
+            start = data.Position + offset;
+
+            Add(new PlayerCollider(OnPlayerSilver));
             Add(new DashListener {
                 OnDash = OnDash
             });
@@ -38,24 +45,25 @@ namespace FrogHelper.Entities {
 		public override void Added(Scene scene) {
 			base.Added(scene);
 
-			if(InvalidForCollection()) {
+            new DynData<Strawberry>(this).Get<Sprite>("sprite").Play("flap");
+
+			if(InvalidForCollection(true))
                 RemoveSelf();
-			}
 		}
 
         protected virtual void OnDash(Vector2 dir) {
-			if(!flyingAway && Condition.Equals("dashless") && !WaitingOnSeeds) {
+			if(!flyingAway && Condition.Equals("dashless") && uncollected && !WaitingOnSeeds) {
 				Depth = -1000000;
                 Add(new Coroutine(FlyAwayRoutine()));
                 flyingAway = true;
             }
         }
 
-        protected virtual bool InvalidForCollection() {
+        protected virtual bool InvalidForCollection(bool levelLoad) {
             if(!string.IsNullOrWhiteSpace(Condition)) {
                 Level level = SceneAs<Level>();
                 if(Condition.Equals("dashless"))
-                    return level.Session.DashesAtLevelStart > 0;
+                    return level.Session.Dashes > 0;
                 if(Condition.Equals("noExtraJumps"))
                     return FrogHelperModule.Instance.Session.ExtraJumped;
             }
@@ -67,10 +75,10 @@ namespace FrogHelper.Entities {
             DynData<Strawberry> selfData = new DynData<Strawberry>(this);
 
             selfData.Get<Wiggler>("rotateWiggler").Start();
-            selfData["flapSpeed"] = -200f;
+            flapSpeed = -200f;
             Tween tween = Tween.Create(Tween.TweenMode.Oneshot, Ease.CubeOut, 0.25f, start: true);
             tween.OnUpdate = delegate (Tween t) {
-                selfData["flapSpeed"] = MathHelper.Lerp(-200f, 0f, t.Eased);
+                flapSpeed = MathHelper.Lerp(-200f, 0f, t.Eased);
             };
             Add(tween);
             yield return 0.1f;
@@ -82,23 +90,57 @@ namespace FrogHelper.Entities {
 
             tween = Tween.Create(Tween.TweenMode.Oneshot, null, 0.5f, start: true);
             tween.OnUpdate = delegate (Tween t) {
-                selfData["flapSpeed"] = MathHelper.Lerp(0f, -200f, t.Eased);
+                flapSpeed = MathHelper.Lerp(0f, -200f, t.Eased);
             };
             Add(tween);
         }
 
 		public override void Update() {
 			base.Update();
-			if(!flyingAway && InvalidForCollection()) {
-                Depth = -1000000;
-                Add(new Coroutine(FlyAwayRoutine()));
-                flyingAway = true;
+            if(uncollected) {
+                if(!flyingAway && /*sprite.CurrentAnimationFrame % 9 == 4*/Scene.OnInterval(9 * 1 / 12f)) {
+                    Audio.Play("event:/game/general/strawberry_wingflap", Position);
+                    flapSpeed = -50f;
+                }
+                if(!flyingAway && InvalidForCollection(false)) {
+                    Depth = -1000000;
+                    Add(new Coroutine(FlyAwayRoutine()));
+                    flyingAway = true;
+                }
+                Y += flapSpeed * Engine.DeltaTime;
+                if(flyingAway) {
+                    if(Y < (SceneAs<Level>().Bounds.Top - 16)) {
+                        RemoveSelf();
+                    }
+                } else {
+                    flapSpeed = Calc.Approach(flapSpeed, 20f, 170f * Engine.DeltaTime);
+                    if(Y < start.Y - 5f) {
+                        Y = start.Y - 5f;
+                    } else if(Y > start.Y + 5f) {
+                        Y = start.Y + 5f;
+                    }
+                }
             }
-		}
+        }
 
-		// hooks
+        private void OnPlayerSilver(Player player) {
+            if(uncollected) {
+                Level level = SceneAs<Level>();
+                uncollected = false;
+                Sprite sprite = new DynData<Strawberry>(this).Get<Sprite>("sprite");
+                sprite.Rate = 0f;
+                Alarm.Set(this, Follower.FollowDelay, delegate {
+                    sprite.Rate = 1f;
+                    sprite.Play("idle");
+                    level.Particles.Emit(P_WingsBurst, 8, Position + new Vector2(8f, 0f), new Vector2(4f, 2f));
+                    level.Particles.Emit(P_WingsBurst, 8, Position - new Vector2(8f, 0f), new Vector2(4f, 2f));
+                });
+            }
+        }
 
-		static Type jumpCountType;
+        // hooks
+
+        static Type jumpCountType;
 
         public static void Load() {
             On.Celeste.Level.Reload += OnLevelReload;
@@ -112,7 +154,7 @@ namespace FrogHelper.Entities {
 
                 FrogHelperModule.OptionalHooks.Add(new Hook(
                     jumpCountType.GetMethod("canJump", BindingFlags.NonPublic | BindingFlags.Instance),
-                    typeof(FrogelineWingedSilver).GetMethod("CheckExtraJumped", BindingFlags.NonPublic | BindingFlags.Static)));
+                    typeof(WingedSilver).GetMethod("CheckExtraJumped", BindingFlags.NonPublic | BindingFlags.Static)));
             }
         }
 
@@ -121,11 +163,11 @@ namespace FrogHelper.Entities {
         }
 
         private static void OnLevelReload(On.Celeste.Level.orig_Reload orig, Level self) {
-            orig(self);
-			if(!self.Completed) {
+            if(!self.Completed) {
                 var session = FrogHelperModule.Instance.Session;
                 session.ExtraJumped = session.ExtraJumpedAtLevelStart;
             }
+            orig(self);
         }
 
         private static void OnLevelLoad(Level level, Player.IntroTypes playerIntro, bool isFromLoader) {
@@ -133,13 +175,14 @@ namespace FrogHelper.Entities {
             session.ExtraJumpedAtLevelStart = session.ExtraJumped;
         }
 
-        private delegate float orig_JumpCount_canJump(float initialJumpGraceTimer, Player self, bool canWallJumpRight, bool canWallJumpLeft);
-        private static void CheckExtraJumped(orig_JumpCount_canJump orig, float initialJumpGraceTimer, Player self, bool canWallJumpRight, bool canWallJumpLeft) {
+        private delegate float orig_JumpCount_canJump(object org, float initialJumpGraceTimer, Player self, bool canWallJumpRight, bool canWallJumpLeft);
+        private static float CheckExtraJumped(orig_JumpCount_canJump orig, object org, float initialJumpGraceTimer, Player self, bool canWallJumpRight, bool canWallJumpLeft) {
             DynamicData data = new DynamicData(jumpCountType);
             int jumpCountPrev = data.Get<int>("jumpBuffer");
-            orig(initialJumpGraceTimer, self, canWallJumpRight, canWallJumpLeft);
+            var ret = orig(org, initialJumpGraceTimer, self, canWallJumpRight, canWallJumpLeft);
 			if(data.Get<int>("jumpBuffer") < jumpCountPrev)
                 FrogHelperModule.Instance.Session.ExtraJumped = true;
+            return ret;
         }
 
 

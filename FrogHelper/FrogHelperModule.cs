@@ -19,11 +19,11 @@ namespace FrogHelper {
 		}
 
 		public override void Load() {
-			FrogelineWingedSilver.Load();
+			WingedSilver.Load();
 		}
 
 		public override void Unload() {
-			FrogelineWingedSilver.Unload();
+			WingedSilver.Unload();
 
 			foreach(var item in OptionalHooks)
 				item.Dispose();
@@ -31,7 +31,7 @@ namespace FrogHelper {
 		}
 
 		public override void Initialize() {
-			FrogelineWingedSilver.Initialize();
+			WingedSilver.Initialize();
 		}
 	}
 }

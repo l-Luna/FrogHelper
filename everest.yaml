@@ -4,3 +4,6 @@
   Dependencies:
     - Name: Everest
       Version: 1.0.0
+  OptionalDependencies:
+    - Name: ExtendedVariantMode
+      Version: 0.21.0
