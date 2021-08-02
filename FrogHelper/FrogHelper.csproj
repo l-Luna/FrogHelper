@@ -28,8 +28,4 @@
     <Reference Include="YamlDotNet" HintPath="..\..\..\YamlDotNet.dll" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Entities\" />
-  </ItemGroup>
-
 </Project>
