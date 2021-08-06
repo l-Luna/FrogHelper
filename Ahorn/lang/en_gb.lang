@@ -1,0 +1,3 @@
+
+# Winged Silver
+placements.entities.FrogHelper/WingedSilver.tooltips.condition=The condition under which this berry appears. Currently one of "dashless", which flies away when you dash, and "noExtraJumps", which flies away when you use an extra jump (or always appears if Extended Variants is not installed). If the player violates the condition, but dies bfeore transitioning between screens, the berry will still appear.

@@ -1,7 +1,6 @@
 ﻿using Celeste;
 using Celeste.Mod;
 using Celeste.Mod.Entities;
-using Celeste.Mod.Helpers;
 using Microsoft.Xna.Framework;
 using Monocle;
 using MonoMod.RuntimeDetour;
