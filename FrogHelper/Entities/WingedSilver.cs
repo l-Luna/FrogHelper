@@ -44,9 +44,17 @@ namespace FrogHelper.Entities {
 		public override void Added(Scene scene) {
 			base.Added(scene);
 
-            new DynData<Strawberry>(this).Get<Sprite>("sprite").Play("flap");
+            var selfData = new DynData<Strawberry>(this);
+            Sprite sprite = selfData.Get<Sprite>("sprite");
 
-			if(InvalidForCollection(true))
+			if(SaveData.Instance.CheckStrawberry(ID))
+                sprite = GFX.SpriteBank.CreateOn(sprite, "FrogHelper_ghostWingedSilver");
+            else
+                sprite = GFX.SpriteBank.CreateOn(sprite, "FrogHelper_wingedSilver");
+            sprite.Play("idle");
+            sprite.OnFrameChange = OnAnimate;
+
+            if(InvalidForCollection(true))
                 RemoveSelf();
 		}
 
@@ -94,13 +102,30 @@ namespace FrogHelper.Entities {
             Add(tween);
         }
 
-		public override void Update() {
+        private void OnAnimate(string id) {
+            var selfData = new DynData<Strawberry>(this);
+            Sprite sprite = selfData.Get<Sprite>("sprite");
+            if(!flyingAway && sprite.CurrentAnimationFrame % 7 == 4) {
+                Audio.Play("event:/game/general/strawberry_wingflap", Position);
+                flapSpeed = -50f;
+            }
+
+            int num = uncollected ? 36 : 27;
+            if(sprite.CurrentAnimationFrame == num) {
+                selfData.Get<Tween>("lightTween").Start();
+                if(uncollected && (CollideCheck<FakeWall>() || CollideCheck<Solid>())) {
+                    Audio.Play("event:/game/general/strawberry_pulse", Position);
+                    SceneAs<Level>().Displacement.AddBurst(Position, 0.6f, 4f, 28f, 0.1f);
+                } else {
+                    Audio.Play("event:/game/general/strawberry_pulse", Position);
+                    SceneAs<Level>().Displacement.AddBurst(Position, 0.6f, 4f, 28f, 0.2f);
+                }
+            }
+        }
+
+        public override void Update() {
 			base.Update();
             if(uncollected) {
-                if(!flyingAway && /*sprite.CurrentAnimationFrame % 9 == 4*/Scene.OnInterval(9 * 1 / 12f)) {
-                    Audio.Play("event:/game/general/strawberry_wingflap", Position);
-                    flapSpeed = -50f;
-                }
                 if(!flyingAway && InvalidForCollection(false)) {
                     Depth = -1000000;
                     Add(new Coroutine(FlyAwayRoutine()));
@@ -129,6 +154,7 @@ namespace FrogHelper.Entities {
                 Sprite sprite = new DynData<Strawberry>(this).Get<Sprite>("sprite");
                 sprite.Rate = 0f;
                 Alarm.Set(this, Follower.FollowDelay, delegate {
+                    GFX.SpriteBank.CreateOn(sprite, SaveData.Instance.CheckStrawberry(ID) ? "CollabUtils2_ghostSilverBerry" : "CollabUtils2_silverBerry");
                     sprite.Rate = 1f;
                     sprite.Play("idle");
                     level.Particles.Emit(P_WingsBurst, 8, Position + new Vector2(8f, 0f), new Vector2(4f, 2f));

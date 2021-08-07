@@ -1,0 +1,18 @@
+<Sprites>
+  
+  <!-- The idle anim is "CollabUtils2_silverBerry" or "CollabUtils2_ghostSilverBerry", defined in Collab Utils. -->
+  
+  <FrogHelper_wingedSilver path="objects/FrogHelper/wingedSilver/" start="idle">
+    <Center />
+    
+    <Loop id="idle" path="idle" delay=".08" frames="0-6,0-6,0-6,0-6,0-5,7" />
+    <Anim id="collect" path="idle" delay=".07" frames="8-12" />
+  </FrogHelper_wingedSilver>
+  
+  <FrogHelper_ghostWingedSilver path="objects/FrogHelper/wingedSilver/" start="idle">
+    <Center />
+	
+    <Loop id="idle" path="ghost" delay=".08" frames="0-6,0-6,0-6,0-6,0-5,7" />
+    <Anim id="collect" path="ghost" delay=".07" frames="8-12" />
+  </FrogHelper_ghostWingedSilver>
+</Sprites>
