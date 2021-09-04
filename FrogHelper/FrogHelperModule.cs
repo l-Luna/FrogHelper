@@ -20,10 +20,12 @@ namespace FrogHelper {
 
 		public override void Load() {
 			WingedSilver.Load();
+			StylegroundsPanelRenderer.Load();
 		}
 
 		public override void Unload() {
 			WingedSilver.Unload();
+			StylegroundsPanelRenderer.Unload();
 
 			foreach(var item in OptionalHooks)
 				item.Dispose();
