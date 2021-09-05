@@ -41,12 +41,24 @@ namespace FrogHelper.Entities {
 
             foreach (var item in toRender){
                 var room = item.Key;
+                foreach(Backdrop bg in renderer.Backdrops)
+                    if(IsVisible(bg, level as Level, room)){
+                        bool wasVisible = bg.Visible, wasForceVisible = bg.ForceVisible;
+                        bg.Visible = true;
+                        bg.ForceVisible = true;
+                        bg.Update(level);
+                        bg.BeforeRender(level);
+                        bg.Visible = wasVisible;
+                        bg.ForceVisible = wasForceVisible;
+                    }
                 // get our styleground mask
                 Engine.Graphics.GraphicsDevice.SetRenderTarget(MaskRenderTarget);
                 Engine.Graphics.GraphicsDevice.Clear(new Color(0, 0, 0, 0));
                 Draw.SpriteBatch.Begin();
                 foreach (var panel in item)
-                    Draw.Rect(panel.X - camera.Left, panel.Y - camera.Top, panel.Width, panel.Height, Color.White * panel.Opacity);
+                    Draw.Rect((panel.X - camera.Left - (320 / 2)) * panel.ScrollX + (320 / 2),
+                              (panel.Y - camera.Top - (180 / 2)) * panel.ScrollY + (180 / 2),
+                               panel.Width, panel.Height, Color.White * panel.Opacity);
                 Draw.SpriteBatch.End();
                 // render some styleground
                 Engine.Graphics.GraphicsDevice.SetRenderTarget(StylegroundsRenderTarget);
@@ -69,8 +81,6 @@ namespace FrogHelper.Entities {
             bool usingSpritebatch = false;
             foreach(Backdrop backdrop in renderer.Backdrops){
                 if (IsVisible(backdrop, level, room)){
-                    if(!backdrop.Visible)
-                        backdrop.Update(level);
                     if (backdrop is Parallax && (backdrop as Parallax).BlendState != blendState){
 						if(usingSpritebatch)
 				            Draw.SpriteBatch.End();

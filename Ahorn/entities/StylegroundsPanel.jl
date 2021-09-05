@@ -21,6 +21,8 @@ const placements = Ahorn.PlacementDict(
     ),
 )
 
+Ahorn.resizable(entity::StylegroundsPanel) = true, true
+
 function Ahorn.selection(entity::StylegroundsPanel)
     x, y = Ahorn.position(entity)
 
