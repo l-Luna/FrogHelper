@@ -105,7 +105,7 @@ namespace FrogHelper.Entities {
         private void OnAnimate(string id) {
             var selfData = new DynData<Strawberry>(this);
             Sprite sprite = selfData.Get<Sprite>("sprite");
-            if(!flyingAway && sprite.CurrentAnimationFrame % 7 == 4) {
+            if(!flyingAway && uncollected && sprite.CurrentAnimationFrame % 7 == 4) {
                 Audio.Play("event:/game/general/strawberry_wingflap", Position);
                 flapSpeed = -50f;
             }
@@ -190,14 +190,16 @@ namespace FrogHelper.Entities {
         private static void OnLevelReload(On.Celeste.Level.orig_Reload orig, Level self) {
             if(!self.Completed) {
                 var session = FrogHelperModule.Instance.Session;
-                session.ExtraJumped = session.ExtraJumpedAtLevelStart;
+                if(session != null)
+                    session.ExtraJumped = session.ExtraJumpedAtLevelStart;
             }
             orig(self);
         }
 
         private static void OnLevelLoad(Level level, Player.IntroTypes playerIntro, bool isFromLoader) {
             var session = FrogHelperModule.Instance.Session;
-            session.ExtraJumpedAtLevelStart = session.ExtraJumped;
+            if(session != null)
+                session.ExtraJumpedAtLevelStart = session.ExtraJumped;
         }
 
         private delegate float orig_JumpCount_canJump(object org, float initialJumpGraceTimer, Player self, bool canWallJumpRight, bool canWallJumpLeft);
