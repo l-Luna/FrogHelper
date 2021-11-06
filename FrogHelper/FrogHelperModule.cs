@@ -12,6 +12,9 @@ namespace FrogHelper {
 		public override Type SessionType => typeof(FrogHelperSession);
 		public FrogHelperSession Session => _Session as FrogHelperSession;
 
+		public override Type SaveDataType => typeof(FrogHelperSaveData);
+		public FrogHelperSaveData SaveData => _SaveData as FrogHelperSaveData;
+
 		public static List<Hook> OptionalHooks = new List<Hook>();
 
 		public FrogHelperModule() {
