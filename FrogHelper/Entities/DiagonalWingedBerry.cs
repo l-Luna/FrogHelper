@@ -8,23 +8,26 @@ using System.Collections;
 namespace FrogHelper.Entities {
 
     /// <summary>
-    /// A silver strawberry that appears only when certain conditions are met, and does not require deathless completion.
+    /// A winged strawberry that only flies away when you diagonally dash.
     /// </summary>
     [CustomEntity("FrogHelper/DiagonalWingedBerry")]
     [RegisterStrawberry(tracked: true, blocksCollection: false)]
     public class DiagonalWingedBerry : Strawberry {
 
+		private readonly bool inverted;
+
         public DiagonalWingedBerry(EntityData data, Vector2 offset, EntityID gid) : base(data, offset, gid) {
             new DynData<Strawberry>(this)["Winged"] = true;
+			inverted = data.Bool("inverted", false);
 
-            Add(new DashListener {
+			Add(new DashListener {
                 OnDash = OnDash
             });
         }
 
         private void OnDash(Vector2 dir){
             var selfdata = new DynData<Strawberry>(this);
-			if ((dir.X != 0) && (dir.Y != 0) && !selfdata.Get<bool>("flyingAway") && !WaitingOnSeeds){
+			if ((((dir.X != 0) && (dir.Y != 0)) != inverted) && !selfdata.Get<bool>("flyingAway") && !WaitingOnSeeds){
 				base.Depth = -1000000;
 				Add(new Coroutine(FlyAwayRoutine()));
 				selfdata["flyingAway"] = true;
