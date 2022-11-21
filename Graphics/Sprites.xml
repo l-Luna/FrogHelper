@@ -11,8 +11,28 @@
   
   <FrogHelper_ghostWingedSilver path="objects/FrogHelper/wingedSilver/" start="idle">
     <Center />
-	
+    
     <Loop id="idle" path="ghost" delay=".08" frames="0-6,0-6,0-6,0-6,0-5,7" />
     <Anim id="collect" path="ghost" delay=".07" frames="8-12" />
   </FrogHelper_ghostWingedSilver>
+
+  <FrogHelper_frogBerry path="objects/FrogHelper/frogBerry/" start="idle">
+    <Center />
+    
+    <Loop id="idle" path="normal" delay=".08" frames="0-6,0-6,0-6,0-6,0-5,7" />
+    <Anim id="collect" path="normal" delay=".07" frames="8-12" />
+  </FrogHelper_frogBerry>
+
+  <FrogHelper_ghostFrogBerry path="objects/FrogHelper/frogBerry/" start="idle">
+    <Center />
+    
+    <Loop id="idle" path="normal" delay=".08" frames="0-6,0-6,0-6,0-6,0-5,7" />
+    <Anim id="collect" path="normal" delay=".07" frames="8-13" />
+  </FrogHelper_ghostFrogBerry>
+
+  <FrogHelper_frogularText path="objects/FrogHelper/frogularText/" >
+    <Center />
+
+    <Anim id="fade" path="fade" delay=".07" />
+  </FrogHelper_frogularText>
 </Sprites>
