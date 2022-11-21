@@ -6,6 +6,7 @@
     <RootNamespace>FrogHelper</RootNamespace>
     <LangVersion>8</LangVersion>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <PathMap>$(MSBuildProjectDirectory)=X:\FrogHelper\</PathMap>
   </PropertyGroup>
 
   <!--Disable "Copy Local" for all references-->
