@@ -16,9 +16,9 @@ namespace FrogHelper.Triggers {
 			Level level = Scene as Level;
 			string sid = level.Session.Area.SID;
 			if(!FrogHelperModule.Instance.SaveData.LevelsWithFrogelineCollected.Contains(sid)) {
-				level.Displacement.AddBurst(Position, 0.5f, 4f, 24f, 0.5f);
+				level.Displacement.AddBurst(BottomCenter, 0.5f, 4f, 24f, 0.5f);
 				level.Add(new ConfettiRenderer(BottomCenter));
-				Audio.Play("event:/game/07_summit/checkpoint_confetti", Position);
+				Audio.Play("event:/game/07_summit/checkpoint_confetti", BottomCenter);
 				FrogHelperModule.Instance.SaveData.LevelsWithFrogelineCollected.Add(sid);
 			}
 		}
