@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using Celeste;
 using Celeste.Mod.Entities;
@@ -83,6 +82,7 @@ namespace FrogHelper.Entities {
             //Replace the sprite
             sprite = new DynData<Strawberry>(this).Get<Sprite>("sprite");
             sprite = GFX.SpriteBank.CreateOn(sprite, SaveData.Instance.CheckStrawberry(ID) ? "FrogHelper_ghostFrogBerry" : "FrogHelper_frogBerry");
+            sprite.OnFrameChange = OnAnimate;
             sprite.Play("idle");
         }
 
@@ -112,6 +112,20 @@ namespace FrogHelper.Entities {
                 AreaData oArea = AreaData.Get(id);
                 if(oArea?.LevelSet != curLevelSet) break;
                 yield return oArea;
+            }
+        }
+
+        private void OnAnimate(string id) {
+            DynData<Strawberry> dynDat = new DynData<Strawberry>(this);
+            if(sprite.CurrentAnimationFrame == 36) {
+                dynDat.Get<Tween>("lightTween").Start();
+                if(dynDat.Get<bool>("uncollected") && (CollideCheck<FakeWall>() || CollideCheck<Solid>())) {
+                    Audio.Play("event:/game/general/strawberry_pulse", Position);
+                    SceneAs<Level>().Displacement.AddBurst(Position, 0.6f, 4f, 28f, 0.1f);
+                } else {
+                    Audio.Play("event:/game/general/strawberry_pulse", Position);
+                    SceneAs<Level>().Displacement.AddBurst(Position, 0.6f, 4f, 28f, 0.2f);
+                }
             }
         }
 

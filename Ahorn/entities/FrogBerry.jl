@@ -7,13 +7,19 @@ using ..Ahorn, Maple
     y::Integer
 )
 
+@mapdef Entity "FrogHelper/FrogBerryShard" FrogBerryShard(
+    x::Integer,
+    y::Integer
+)
+
 const placements = Ahorn.PlacementDict(
     "Frog Berry (Frogeline Helper)" => Ahorn.EntityPlacement(
         FrogBerry,
-    )
+    ),
+    "Frog Berry Shard (Frogeline Helper)" => Ahorn.EntityPlacement(
+        FrogBerryShard,
+    ),
 )
-
-const sprite = "objects/FrogHelper/frogBerry/normal00"
 
 function Ahorn.selection(entity::FrogBerry)
     x, y = Ahorn.position(entity)
@@ -22,7 +28,17 @@ function Ahorn.selection(entity::FrogBerry)
 end
 
 function Ahorn.render(ctx::Ahorn.Cairo.CairoContext, entity::FrogBerry, room::Maple.Room)
-    Ahorn.drawSprite(ctx, sprite, 0, 0)
+    Ahorn.drawSprite(ctx, "objects/FrogHelper/frogBerry/normal00", 0, 0)
+end
+
+function Ahorn.selection(entity::FrogBerryShard)
+    x, y = Ahorn.position(entity)
+
+    return Ahorn.Rectangle(x - 9, y - 8, 18, 16)
+end
+
+function Ahorn.render(ctx::Ahorn.Cairo.CairoContext, entity::FrogBerryShard, room::Maple.Room)
+    Ahorn.drawSprite(ctx, "objects/FrogHelper/frogBerryShard/normal00", 0, 0)
 end
 
 end

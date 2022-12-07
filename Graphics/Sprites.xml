@@ -26,9 +26,23 @@
   <FrogHelper_ghostFrogBerry path="objects/FrogHelper/frogBerry/" start="idle">
     <Center />
     
-    <Loop id="idle" path="normal" delay=".08" frames="0-6,0-6,0-6,0-6,0-5,7" />
-    <Anim id="collect" path="normal" delay=".07" frames="8-13" />
+    <Loop id="idle" path="ghost" delay=".08" frames="0-6,0-6,0-6,0-6,0-5,7" />
+    <Anim id="collect" path="ghost" delay=".07" frames="8-13" />
   </FrogHelper_ghostFrogBerry>
+
+  <FrogHelper_frogBerryShard path="objects/FrogHelper/frogBerryShard/" start="idle">
+    <Center />
+    
+    <Loop id="idle" path="normal" delay=".08" frames="0-6,0-6,0-6,0-6,0-6" />
+    <Anim id="collect" path="normal" delay=".07" frames="7-11" />
+  </FrogHelper_frogBerryShard>
+
+  <FrogHelper_ghostFrogBerryShard path="objects/FrogHelper/frogBerryShard/" start="idle">
+    <Center />
+    
+    <Loop id="idle" path="ghost" delay=".08" frames="0-6,0-6,0-6,0-6,0-6,0-6" />
+    <Anim id="collect" path="ghost" delay=".07" frames="7-11" />
+  </FrogHelper_ghostFrogBerryShard>
 
   <FrogHelper_frogularText path="objects/FrogHelper/frogularText/" >
     <Center />

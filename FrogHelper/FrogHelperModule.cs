@@ -27,6 +27,7 @@ namespace FrogHelper {
 			WingedSilver.Load();
 			StylegroundsPanelRenderer.Load();
 			FrogBerry.Load();
+			FrogBerryShard.Load();
 
 			On.Celeste.OuiChapterPanel.Render += AddFrogToChapterPanel;
 		}
@@ -35,6 +36,7 @@ namespace FrogHelper {
 			WingedSilver.Unload();
 			StylegroundsPanelRenderer.Unload();
 			FrogBerry.Unload();
+			FrogBerryShard.Unload();
 
 			On.Celeste.OuiChapterPanel.Render -= AddFrogToChapterPanel;
 
