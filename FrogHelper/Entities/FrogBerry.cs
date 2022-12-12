@@ -119,7 +119,7 @@ namespace FrogHelper.Entities {
             DynData<Strawberry> dynDat = new DynData<Strawberry>(this);
             if(sprite.CurrentAnimationFrame == 36) {
                 dynDat.Get<Tween>("lightTween").Start();
-                if(dynDat.Get<bool>("uncollected") && (CollideCheck<FakeWall>() || CollideCheck<Solid>())) {
+                if(!dynDat.Get<bool>("collected") && (CollideCheck<FakeWall>() || CollideCheck<Solid>())) {
                     Audio.Play("event:/game/general/strawberry_pulse", Position);
                     SceneAs<Level>().Displacement.AddBurst(Position, 0.6f, 4f, 28f, 0.1f);
                 } else {
