@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Reflection;
 using Celeste;
+using Celeste.Mod;
 using Celeste.Mod.Entities;
 using Microsoft.Xna.Framework;
+using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Monocle;
 using MonoMod.Cil;
@@ -152,7 +155,7 @@ namespace FrogHelper.Entities {
                             displayY += 78f;
                         }
                     }
-                    displayY += 78f;
+                    displayY += 78f; //TODO Allow this offset to be configurable
                     Y = Calc.Approach(Y, displayY, Engine.DeltaTime * 800f);
                 }
                 Visible = DrawLerp > 0f;
@@ -168,7 +171,9 @@ namespace FrogHelper.Entities {
 
         private Sprite sprite;
 
-        public FrogBerryShard(EntityData data, Vector2 offset, EntityID gid) : base(data, offset, gid) {}
+        public FrogBerryShard(EntityData data, Vector2 offset, EntityID gid) : base(data, offset, gid) {
+            //TODO Patch isGhostBerry
+        }
 
         public override void Added(Scene scene) {
             base.Added(scene);
@@ -213,10 +218,11 @@ namespace FrogHelper.Entities {
             }
         }
 
-        private static ILHook updateHook;
+        private static ILHook collectHook, updateHook;
 
         public static void Load() {
             On.Celeste.Strawberry.CollectRoutine += CollectRoutineHook;
+            collectHook = new ILHook(typeof(Strawberry).GetMethod(nameof(Strawberry.orig_OnCollect)), CollectRoutineModifier);
             updateHook = new ILHook(typeof(Strawberry).GetMethod(nameof(Strawberry.orig_Update)), UpdateModifier);
 
             IL.Celeste.LevelLoader.LoadingThread += LoadingThreadHook;
@@ -226,8 +232,9 @@ namespace FrogHelper.Entities {
 
         public static void Unload() {
             On.Celeste.Strawberry.CollectRoutine -= CollectRoutineHook;
+            collectHook?.Dispose();
             updateHook?.Dispose();
-            updateHook = null;
+            collectHook = updateHook = null;
 
             IL.Celeste.LevelLoader.LoadingThread -= LoadingThreadHook;
             IL.Celeste.Level.Reload -= DrawLerpHook;
@@ -237,6 +244,60 @@ namespace FrogHelper.Entities {
         private static IEnumerator CollectRoutineHook(On.Celeste.Strawberry.orig_CollectRoutine orig, Strawberry self, int collectIndex) {
             if(self is FrogBerryShard frogBerryShard) return frogBerryShard.CollectRoutine(collectIndex);
             return orig(self, collectIndex);
+        }
+
+        private static void CollectRoutineModifier(ILContext ctx) {
+            //Patch out AddStrawberry calls for shards
+            {
+                ILCursor cursor = new ILCursor(ctx);
+                while(cursor.TryGotoNext(i => i.MatchCallOrCallvirt(typeof(SaveData), nameof(SaveData.AddStrawberry)))) {
+                    cursor.Instrs[cursor.Index].MatchCallOrCallvirt(out MethodReference methodRef);
+                    ILLabel shardLabel = cursor.DefineLabel(), endLabel = cursor.DefineLabel();
+
+                    //Check if the strawberry is a shard
+                    cursor.Emit(OpCodes.Ldarg_0);
+                    cursor.Emit(OpCodes.Isinst, typeof(FrogBerryShard));
+                    cursor.Emit(OpCodes.Brtrue, shardLabel);
+
+                    //If no: execute regular code, then go to end
+                    cursor.Index++;
+                    cursor.Emit(OpCodes.Br, endLabel);
+
+                    //If yes: pop arguments, and do nothing
+                    cursor.MarkLabel(shardLabel);
+                    if(methodRef.HasThis) cursor.Emit(OpCodes.Pop);
+                    for(int i = 0; i < methodRef.Parameters.Count; i++) cursor.Emit(OpCodes.Pop);
+
+                    cursor.MarkLabel(endLabel);
+                }
+            }
+
+            //Patch out session.Strawberries.Add calls for shards
+            {
+                ILCursor cursor = new ILCursor(ctx);
+                while(cursor.TryGotoNext(i => i.MatchCallOrCallvirt(typeof(HashSet<EntityID>), nameof(HashSet<EntityID>.Add)))) {
+                    cursor.Instrs[cursor.Index].MatchCallOrCallvirt(out MethodReference methodRef);
+                    ILLabel shardLabel = cursor.DefineLabel(), endLabel = cursor.DefineLabel();
+
+                    //Check if the strawberry is a shard
+                    cursor.Emit(OpCodes.Ldarg_0);
+                    cursor.Emit(OpCodes.Isinst, typeof(FrogBerryShard));
+                    cursor.Emit(OpCodes.Brtrue, shardLabel);
+
+                    //If no: execute regular code, then go to end
+                    cursor.Index++;
+                    cursor.Emit(OpCodes.Br, endLabel);
+
+                    //If yes: check passed set, and only add if it's not the strawberry one
+                    cursor.MarkLabel(shardLabel);
+                    cursor.Emit(OpCodes.Ldarg_0);
+                    cursor.EmitDelegate<Action<HashSet<EntityID>, EntityID, Strawberry>>((set, id, berry) => {
+                        if(set != berry.SceneAs<Level>()?.Session.Strawberries) set.Add(id);
+                    });
+
+                    cursor.MarkLabel(endLabel);
+                }
+            }
         }
 
         private static void UpdateModifier(ILContext ctx) {

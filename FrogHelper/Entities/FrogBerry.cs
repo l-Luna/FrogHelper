@@ -74,7 +74,9 @@ namespace FrogHelper.Entities {
 
         private Sprite sprite;
 
-        public FrogBerry(EntityData data, Vector2 offset, EntityID gid) : base(data, offset, gid) {}
+        public FrogBerry(EntityData data, Vector2 offset, EntityID gid) : base(data, offset, gid) {
+            //TODO Patch isGhostBerry
+        }
 
         public override void Added(Scene scene) {
             base.Added(scene);
