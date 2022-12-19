@@ -89,7 +89,7 @@ namespace FrogHelper.Entities {
         public override void Awake(Scene scene) {
             //Check if all frogelines have been collected in the same levelset
             foreach(AreaData area in IterateOtherAreas()) {
-                if(!FrogHelperModule.Instance.SaveData.LevelsWithFrogelineCollected.Contains(area.SID)) {
+                if(!FrogHelperModule.Instance.SaveData.LevelsWithFrogShardCollected.Contains(area.SID)) {
                     RemoveSelf();
                     return;
                 }
