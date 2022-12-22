@@ -171,9 +171,7 @@ namespace FrogHelper.Entities {
 
         private Sprite sprite;
 
-        public FrogBerryShard(EntityData data, Vector2 offset, EntityID gid) : base(data, offset, gid) {
-            //TODO Patch isGhostBerry
-        }
+        public FrogBerryShard(EntityData data, Vector2 offset, EntityID gid) : base(data, offset, gid) {}
 
         public override void Added(Scene scene) {
             base.Added(scene);
@@ -221,6 +219,7 @@ namespace FrogHelper.Entities {
         private static ILHook collectHook, updateHook;
 
         public static void Load() {
+            IL.Celeste.Strawberry.ctor += ctorModifier;
             On.Celeste.Strawberry.CollectRoutine += CollectRoutineHook;
             collectHook = new ILHook(typeof(Strawberry).GetMethod(nameof(Strawberry.orig_OnCollect)), CollectRoutineModifier);
             updateHook = new ILHook(typeof(Strawberry).GetMethod(nameof(Strawberry.orig_Update)), UpdateModifier);
@@ -231,6 +230,7 @@ namespace FrogHelper.Entities {
         }
 
         public static void Unload() {
+            IL.Celeste.Strawberry.ctor -= ctorModifier;
             On.Celeste.Strawberry.CollectRoutine -= CollectRoutineHook;
             collectHook?.Dispose();
             updateHook?.Dispose();
@@ -239,6 +239,40 @@ namespace FrogHelper.Entities {
             IL.Celeste.LevelLoader.LoadingThread -= LoadingThreadHook;
             IL.Celeste.Level.Reload -= DrawLerpHook;
             IL.Celeste.Level.SkipCutsceneRoutine -= DrawLerpHook;
+        }
+
+        private static void ctorModifier(ILContext ctx) {
+            //Patch SaveData.Instance.CheckStrawberry calls
+            FieldInfo idField = typeof(Strawberry).GetField(nameof(Strawberry.ID));
+
+            ILCursor cursor = new ILCursor(ctx);
+            while(cursor.TryGotoNext(i => i.MatchCallOrCallvirt(typeof(SaveData), nameof(SaveData.CheckStrawberry)))) {
+                ILLabel origLabel = cursor.DefineLabel(), endLabel = cursor.DefineLabel();
+
+                //Check if the strawberry is a shard, and the ID is the shard's
+                cursor.MoveAfterLabels();
+                cursor.Emit(OpCodes.Ldarg_0);
+                cursor.Emit(OpCodes.Isinst, typeof(FrogBerryShard));
+                cursor.Emit(OpCodes.Brfalse, origLabel);
+
+                cursor.Emit(OpCodes.Dup);
+                cursor.Emit(OpCodes.Ldarg_0);
+                cursor.Emit(OpCodes.Ldfld, idField);
+                cursor.EmitDelegate<Func<EntityID, EntityID, bool>>((a, b) => a.Level == b.Level && a.ID == b.ID);
+                cursor.Emit(OpCodes.Brfalse, origLabel);
+
+                //If yes: check if the frog berry has been collected
+                cursor.Emit(OpCodes.Pop);
+                cursor.Emit(OpCodes.Pop);
+                cursor.EmitDelegate<Func<bool>>(() => FrogHelperModule.Instance.SaveData.LevelsWithFrogShardCollected.Contains(SaveData.Instance.CurrentSession_Safe.Area.SID));
+                cursor.Emit(OpCodes.Br, endLabel);
+
+                //If no: execute regular code, then go to end
+                cursor.MarkLabel(origLabel);
+                cursor.Index++;
+
+                cursor.MarkLabel(endLabel);
+            }
         }
 
         private static IEnumerator CollectRoutineHook(On.Celeste.Strawberry.orig_CollectRoutine orig, Strawberry self, int collectIndex) {
@@ -276,7 +310,6 @@ namespace FrogHelper.Entities {
             {
                 ILCursor cursor = new ILCursor(ctx);
                 while(cursor.TryGotoNext(i => i.MatchCallOrCallvirt(typeof(HashSet<EntityID>), nameof(HashSet<EntityID>.Add)))) {
-                    cursor.Instrs[cursor.Index].MatchCallOrCallvirt(out MethodReference methodRef);
                     ILLabel shardLabel = cursor.DefineLabel(), endLabel = cursor.DefineLabel();
 
                     //Check if the strawberry is a shard
