@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using Celeste;
-using Celeste.Mod;
 using Celeste.Mod.Entities;
 using Microsoft.Xna.Framework;
 using Mono.Cecil;
@@ -155,7 +154,7 @@ namespace FrogHelper.Entities {
                             displayY += 78f;
                         }
                     }
-                    displayY += 78f; //TODO Allow this offset to be configurable
+                    displayY += 78f * FrogHelperModule.Instance.Settings.CollectableCountPosition;
                     Y = Calc.Approach(Y, displayY, Engine.DeltaTime * 800f);
                 }
                 Visible = DrawLerp > 0f;

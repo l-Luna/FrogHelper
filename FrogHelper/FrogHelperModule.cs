@@ -11,6 +11,9 @@ namespace FrogHelper {
 
 		public static FrogHelperModule Instance;
 
+		public override Type SettingsType => typeof(FrogHelperSettings);
+		public FrogHelperSettings Settings => _Settings as FrogHelperSettings;
+
 		public override Type SessionType => typeof(FrogHelperSession);
 		public FrogHelperSession Session => _Session as FrogHelperSession;
 
