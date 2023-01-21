@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using Celeste;
 using Celeste.Mod.Entities;
@@ -168,14 +169,18 @@ namespace FrogHelper.Entities {
             }
         }
 
+        private string shardLevelSet;
         private Sprite sprite;
 
-        public FrogBerryShard(EntityData data, Vector2 offset, EntityID gid) : base(data, offset, gid) {}
+        public FrogBerryShard(EntityData data, Vector2 offset, EntityID gid) : base(data, offset, gid) => shardLevelSet = data.Attr("shardLevelSet");
 
         public override void Added(Scene scene) {
             base.Added(scene);
 
-            bool isGhost = FrogHelperModule.Instance.SaveData.LevelsWithFrogShardCollected.Contains(SceneAs<Level>().Session.Area.SID);
+            AreaKey area = SceneAs<Level>().Session.Area;
+            if(string.IsNullOrEmpty(shardLevelSet)) shardLevelSet = area.LevelSet;
+
+            bool isGhost = FrogHelperModule.Instance.SaveData.LevelsWithFrogShardCollected.TryGetValue(shardLevelSet, out var sids) && sids.Contains(area.SID);
 
             //Replace the sprite
             sprite = new DynData<Strawberry>(this).Get<Sprite>("sprite");
@@ -186,7 +191,11 @@ namespace FrogHelper.Entities {
 
         //Modified vanilla code
         private IEnumerator CollectRoutine(int collectIdx) {
-            FrogHelperModule.Instance.SaveData.LevelsWithFrogShardCollected.Add(SceneAs<Level>().Session.Area.SID);
+            //Mark the frog shard as having been collected
+            if(!FrogHelperModule.Instance.SaveData.LevelsWithFrogShardCollected.TryGetValue(shardLevelSet, out var sids)) {
+                FrogHelperModule.Instance.SaveData.LevelsWithFrogShardCollected.Add(shardLevelSet, sids = new HashSet<string>());
+            }
+            sids.Add(SceneAs<Level>().Session.Area.SID);
 
             Tag = Tags.TransitionUpdate;
             Depth = Depths.FormationSequences - 10;
@@ -260,10 +269,10 @@ namespace FrogHelper.Entities {
                 cursor.EmitDelegate<Func<EntityID, EntityID, bool>>((a, b) => a.Level == b.Level && a.ID == b.ID);
                 cursor.Emit(OpCodes.Brfalse, origLabel);
 
-                //If yes: check if the frog berry has been collected
+                //If yes: check if the frog shards has been collected
                 cursor.Emit(OpCodes.Pop);
                 cursor.Emit(OpCodes.Pop);
-                cursor.EmitDelegate<Func<bool>>(() => FrogHelperModule.Instance.SaveData.LevelsWithFrogShardCollected.Contains(SaveData.Instance.CurrentSession_Safe.Area.SID));
+                cursor.EmitDelegate<Func<bool>>(() => FrogHelperModule.Instance.SaveData.LevelsWithFrogShardCollected.Any(kv => kv.Value.Contains(SaveData.Instance.CurrentSession_Safe.Area.SID)));
                 cursor.Emit(OpCodes.Br, endLabel);
 
                 //If no: execute regular code, then go to end

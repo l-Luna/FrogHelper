@@ -77,8 +77,9 @@ namespace FrogHelper.Entities {
         }
 
         private Sprite sprite;
+        private int numShardsRequired;
 
-        public FrogBerry(EntityData data, Vector2 offset, EntityID gid) : base(data, offset, gid) {}
+        public FrogBerry(EntityData data, Vector2 offset, EntityID gid) : base(data, offset, gid) => numShardsRequired = data.Int("numShardsRequired");
 
         public override void Added(Scene scene) {
             base.Added(scene);
@@ -91,32 +92,13 @@ namespace FrogHelper.Entities {
         }
 
         public override void Awake(Scene scene) {
-            //Check if all frogelines have been collected in the same levelset
-            foreach(AreaData area in IterateOtherAreas()) {
-                if(!FrogHelperModule.Instance.SaveData.LevelsWithFrogShardCollected.Contains(area.SID)) {
-                    RemoveSelf();
-                    return;
-                }
+            //Check if enough frog shards have been collected in the same levelset
+            if(FrogHelperModule.Instance.SaveData.CountCollectedFrogShards(SceneAs<Level>().Session.Area) < numShardsRequired) {
+                RemoveSelf();
+                return;
             }
 
             base.Awake(scene);
-        }
-
-        private IEnumerable<AreaData> IterateOtherAreas() {
-            Level lvl = SceneAs<Level>();
-            string curLevelSet = lvl.Session.Area.LevelSet;
-
-            for(int id = lvl.Session.Area.ID-1; id >= 0; id--) {
-                AreaData oArea = AreaData.Get(id);
-                if(oArea?.LevelSet != curLevelSet) break;
-                yield return oArea;
-            }
-
-            for(int id = lvl.Session.Area.ID+1; id < AreaData.Areas.Count; id++) {
-                AreaData oArea = AreaData.Get(id);
-                if(oArea?.LevelSet != curLevelSet) break;
-                yield return oArea;
-            }
         }
 
         private void OnAnimate(string id) {

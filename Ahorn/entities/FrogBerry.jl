@@ -4,12 +4,14 @@ using ..Ahorn, Maple
 
 @mapdef Entity "FrogHelper/FrogBerry" FrogBerry(
     x::Integer,
-    y::Integer
+    y::Integer,
+    numShardsRequired::Integer=0
 )
 
 @mapdef Entity "FrogHelper/FrogBerryShard" FrogBerryShard(
     x::Integer,
-    y::Integer
+    y::Integer,
+    shardLevelSet::String=""
 )
 
 const placements = Ahorn.PlacementDict(

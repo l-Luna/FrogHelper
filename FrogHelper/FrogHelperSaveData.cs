@@ -1,12 +1,13 @@
 ﻿using Celeste;
 using Celeste.Mod;
+using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace FrogHelper {
 	public class FrogHelperSaveData : EverestModuleSaveData {
-		public HashSet<string> LevelsWithFrogBerryCollected = new HashSet<string>(), LevelsWithFrogShardCollected = new HashSet<string>();
+		public Dictionary<string, HashSet<string>> LevelsWithFrogShardCollected = new Dictionary<string, HashSet<string>>();
+        public HashSet<string> LevelsWithFrogBerryCollected = new HashSet<string>();
 
-        public int CountCollectedFrogShards(AreaKey area) => LevelsWithFrogShardCollected.Count(sid => AreaData.Get(sid).LevelSet == area.LevelSet);
+        public int CountCollectedFrogShards(AreaKey area) => LevelsWithFrogShardCollected.TryGetValue(area.LevelSet, out HashSet<string> sids) ? sids.Count : 0;
     }
 }
