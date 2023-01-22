@@ -5,7 +5,6 @@ using Microsoft.Xna.Framework;
 using MonoMod.RuntimeDetour;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace FrogHelper {
 	public class FrogHelperModule : EverestModule {
@@ -57,7 +56,7 @@ namespace FrogHelper {
 			orig(self);
 			string sid = self.Area.GetSID();
 			AreaModeStats areaModeStats = self.RealStats.Modes[(int)self.Area.Mode];
-			if(SaveData.LevelsWithFrogShardCollected.Any(kv => kv.Value.Contains(sid))) {
+			if(SaveData.LevelsWithFrogShardCollected.Contains(sid)) {
 				GFX.Gui["FrogHelper/frog"].Draw(self.Position + new Vector2(70, areaModeStats.Completed ? 250 : 220), Vector2.Zero, Color.White * 0.75f, areaModeStats.Completed ? 3 : 2.5f, (float)(-Math.PI / 8));
 			}
 		}

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using Celeste;
 using Celeste.Mod.Entities;
@@ -98,19 +97,19 @@ namespace FrogHelper.Entities {
             private float waitTimer;
             private ShardCounter counter;
 
-            public TotalShardDisplay(AreaKey area) {
+            public TotalShardDisplay() {
                 Y = 96f;
                 Depth = Depths.Pickups - 1;
                 Tag = Tags.HUD | Tags.Global | Tags.PauseUpdate | Tags.TransitionUpdate;
                 bg = GFX.Gui["strawberryCountBG"];
-                Add(counter = new ShardCounter(FrogHelperModule.Instance.SaveData.CountCollectedFrogShards(area)));
+                Add(counter = new ShardCounter(FrogHelperModule.Instance.SaveData.LevelsWithFrogShardCollected.Count));
             }
 
             public override void Update() {
                 base.Update();
 
                 Level level = SceneAs<Level>();
-                int numShards = FrogHelperModule.Instance.SaveData.CountCollectedFrogShards(level.Session.Area);
+                int numShards = FrogHelperModule.Instance.SaveData.LevelsWithFrogShardCollected.Count;
 
                 //The player must have at least one shard
                 if(numShards <= 0) {
@@ -191,11 +190,7 @@ namespace FrogHelper.Entities {
 
         //Modified vanilla code
         private IEnumerator CollectRoutine(int collectIdx) {
-            //Mark the frog shard as having been collected
-            if(!FrogHelperModule.Instance.SaveData.LevelsWithFrogShardCollected.TryGetValue(shardLevelSet, out var sids)) {
-                FrogHelperModule.Instance.SaveData.LevelsWithFrogShardCollected.Add(shardLevelSet, sids = new HashSet<string>());
-            }
-            sids.Add(SceneAs<Level>().Session.Area.SID);
+            FrogHelperModule.Instance.SaveData.LevelsWithFrogShardCollected.Add(SceneAs<Level>().Session.Area.SID);
 
             Tag = Tags.TransitionUpdate;
             Depth = Depths.FormationSequences - 10;
@@ -272,7 +267,7 @@ namespace FrogHelper.Entities {
                 //If yes: check if the frog shards has been collected
                 cursor.Emit(OpCodes.Pop);
                 cursor.Emit(OpCodes.Pop);
-                cursor.EmitDelegate<Func<bool>>(() => FrogHelperModule.Instance.SaveData.LevelsWithFrogShardCollected.Any(kv => kv.Value.Contains(SaveData.Instance.CurrentSession_Safe.Area.SID)));
+                cursor.EmitDelegate<Func<bool>>(() => FrogHelperModule.Instance.SaveData.LevelsWithFrogShardCollected.Contains(SaveData.Instance.CurrentSession_Safe.Area.SID));
                 cursor.Emit(OpCodes.Br, endLabel);
 
                 //If no: execute regular code, then go to end
@@ -359,7 +354,7 @@ namespace FrogHelper.Entities {
             ILCursor cursor = new ILCursor(ctx);
             cursor.GotoNext(i => i.MatchNewobj<TotalStrawberriesDisplay>());
             cursor.Emit(OpCodes.Ldarg_0);
-            cursor.EmitDelegate<Action<LevelLoader>>(loader => loader.Level.Add(new TotalShardDisplay(loader.Level.Session.Area)));
+            cursor.EmitDelegate<Action<LevelLoader>>(loader => loader.Level.Add(new TotalShardDisplay()));
         }
 
         private static void DrawLerpHook(ILContext ctx) {

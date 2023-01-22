@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Reflection;
 using Celeste;
 using Celeste.Mod.Entities;
@@ -93,7 +92,7 @@ namespace FrogHelper.Entities {
 
         public override void Awake(Scene scene) {
             //Check if enough frog shards have been collected in the same levelset
-            if(FrogHelperModule.Instance.SaveData.CountCollectedFrogShards(SceneAs<Level>().Session.Area) < numShardsRequired) {
+            if(FrogHelperModule.Instance.SaveData.LevelsWithFrogShardCollected.Count < numShardsRequired) {
                 RemoveSelf();
                 return;
             }
