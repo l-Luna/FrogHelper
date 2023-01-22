@@ -168,18 +168,14 @@ namespace FrogHelper.Entities {
             }
         }
 
-        private string shardLevelSet;
         private Sprite sprite;
 
-        public FrogBerryShard(EntityData data, Vector2 offset, EntityID gid) : base(data, offset, gid) => shardLevelSet = data.Attr("shardLevelSet");
+        public FrogBerryShard(EntityData data, Vector2 offset, EntityID gid) : base(data, offset, gid) {}
 
         public override void Added(Scene scene) {
             base.Added(scene);
 
-            AreaKey area = SceneAs<Level>().Session.Area;
-            if(string.IsNullOrEmpty(shardLevelSet)) shardLevelSet = area.LevelSet;
-
-            bool isGhost = FrogHelperModule.Instance.SaveData.LevelsWithFrogShardCollected.TryGetValue(shardLevelSet, out var sids) && sids.Contains(area.SID);
+            bool isGhost = FrogHelperModule.Instance.SaveData.LevelsWithFrogShardCollected.Contains(SceneAs<Level>().Session.Area.SID);
 
             //Replace the sprite
             sprite = new DynData<Strawberry>(this).Get<Sprite>("sprite");
