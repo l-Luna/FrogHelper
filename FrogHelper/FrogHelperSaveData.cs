@@ -1,5 +1,4 @@
-﻿using Celeste;
-using Celeste.Mod;
+﻿using Celeste.Mod;
 using System.Collections.Generic;
 
 namespace FrogHelper {

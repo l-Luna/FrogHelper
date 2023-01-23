@@ -17,6 +17,22 @@ namespace FrogHelper.Entities {
     [CustomEntity("FrogHelper/FrogBerry")]
     [RegisterStrawberry(tracked: false, blocksCollection: false)]
     public class FrogBerry : Strawberry {
+        private class SilhouetteText : Entity {
+            public readonly int NumShards;
+
+            public SilhouetteText(Vector2 pos, int numShards) : base(pos) {
+                Tag = Tags.HUD;
+                NumShards = numShards;
+            }
+
+            public override void Render() {
+                if(SceneAs<Level>().FrozenOrPaused) return;
+
+                Camera cam = SceneAs<Level>().Camera;
+                ActiveFont.Draw($"{FrogHelperModule.Instance.SaveData.LevelsWithFrogShardCollected.Count} / {NumShards}", Vector2.Transform(Position, cam.Matrix)*6, Vector2.One/2, Vector2.One, Color.White);
+            }
+        }
+
         //Modified vanilla code
         private class FrogularText : Entity {
             private readonly bool isGhost;
@@ -76,23 +92,52 @@ namespace FrogHelper.Entities {
         }
 
         private Sprite sprite;
-        private int numShardsRequired;
+        private readonly int numShardsRequired;
+        private SilhouetteText silhouetteText;
 
         public FrogBerry(EntityData data, Vector2 offset, EntityID gid) : base(data, offset, gid) => numShardsRequired = data.Int("numShardsRequired");
 
         public override void Added(Scene scene) {
+            bool isGhost = FrogHelperModule.Instance.SaveData.LevelsWithFrogBerryCollected.Contains(((Level) scene).Session.Area.SID);
+            string spriteName = isGhost ? "FrogHelper_ghostFrogBerry" : "FrogHelper_frogBerry";
+            float alpha = 1;
+
+            //Check if enough frog shards have been collected
+            if(FrogHelperModule.Instance.SaveData.LevelsWithFrogShardCollected.Count < numShardsRequired) {
+                Depth = Depths.Below;
+                Components.Get<PlayerCollider>().OnCollide = _ => {};
+                scene.Add(silhouetteText = new SilhouetteText(Position + Vector2.UnitY * 20, numShardsRequired));
+
+                isGhost = true;
+                spriteName = "FrogHelper_outlineFrogBerry";
+                alpha = (float) FrogHelperModule.Instance.SaveData.LevelsWithFrogShardCollected.Count / numShardsRequired;
+            }
+
+            DynData<Strawberry> dynDat = new DynData<Strawberry>(this);
+            dynDat.Set<bool>("isGhostBerry", isGhost);
+
             base.Added(scene);
 
             //Replace the sprite
-            sprite = new DynData<Strawberry>(this).Get<Sprite>("sprite");
-            sprite = GFX.SpriteBank.CreateOn(sprite, FrogHelperModule.Instance.SaveData.LevelsWithFrogBerryCollected.Contains(SceneAs<Level>().Session.Area.SID) ? "FrogHelper_ghostFrogBerry" : "FrogHelper_frogBerry");
+            sprite = dynDat.Get<Sprite>("sprite");
+            sprite = GFX.SpriteBank.CreateOn(sprite, spriteName);
             sprite.OnFrameChange = OnAnimate;
             sprite.Play("idle");
+
+            sprite.Color *= alpha;
+            Components.Get<VertexLight>().Alpha *= alpha;
+        }
+
+        public override void Removed(Scene scene) {
+            silhouetteText?.RemoveSelf();
+            silhouetteText = null;
+
+            base.Removed(scene);
         }
 
         public override void Awake(Scene scene) {
-            //Check if enough frog shards have been collected in the same levelset
-            if(FrogHelperModule.Instance.SaveData.LevelsWithFrogShardCollected.Count < numShardsRequired) {
+            //If no shards have been collected, despawn
+            if(FrogHelperModule.Instance.SaveData.LevelsWithFrogShardCollected.Count <= 0) {
                 RemoveSelf();
                 return;
             }

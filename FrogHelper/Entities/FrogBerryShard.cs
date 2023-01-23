@@ -173,12 +173,15 @@ namespace FrogHelper.Entities {
         public FrogBerryShard(EntityData data, Vector2 offset, EntityID gid) : base(data, offset, gid) {}
 
         public override void Added(Scene scene) {
+            bool isGhost = FrogHelperModule.Instance.SaveData.LevelsWithFrogShardCollected.Contains(((Level) scene).Session.Area.SID);
+
+            DynData<Strawberry> dynDat = new DynData<Strawberry>(this);
+            dynDat.Set<bool>("isGhostBerry", isGhost);
+
             base.Added(scene);
 
-            bool isGhost = FrogHelperModule.Instance.SaveData.LevelsWithFrogShardCollected.Contains(SceneAs<Level>().Session.Area.SID);
-
             //Replace the sprite
-            sprite = new DynData<Strawberry>(this).Get<Sprite>("sprite");
+            sprite = dynDat.Get<Sprite>("sprite");
             sprite = GFX.SpriteBank.CreateOn(sprite, isGhost ? "FrogHelper_ghostFrogBerryShard" : "FrogHelper_frogBerryShard");
             sprite.OnFrameChange = OnAnimate;
             sprite.Play("idle");

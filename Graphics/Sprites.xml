@@ -30,6 +30,13 @@
     <Anim id="collect" path="ghost" delay=".07" frames="8-13" />
   </FrogHelper_ghostFrogBerry>
 
+  <FrogHelper_outlineFrogBerry path="objects/FrogHelper/frogBerry/" start="idle">
+    <Center />
+    
+    <Loop id="idle" path="ghost" delay=".08" frames="0-6,0-6,0-6,0-6,0-5,7" />
+    <Anim id="collect" path="ghost" delay=".07" frames="8-13" />
+  </FrogHelper_outlineFrogBerry>
+
   <FrogHelper_frogBerryShard path="objects/FrogHelper/frogBerryShard/" start="idle">
     <Center />
     
