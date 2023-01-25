@@ -17,6 +17,8 @@ namespace FrogHelper.Entities {
     [CustomEntity("FrogHelper/FrogBerry")]
     [RegisterStrawberry(tracked: false, blocksCollection: false)]
     public class FrogBerry : Strawberry {
+        public const string CollectSFX = "event:/FrogBerryCollect/1000";
+
         private class SilhouetteText : Entity {
             public readonly int NumShards;
 
@@ -166,7 +168,7 @@ namespace FrogHelper.Entities {
             Tag = Tags.TransitionUpdate;
             Depth = Depths.FormationSequences - 10;
 
-            Audio.Play("event:/game/general/strawberry_get", Position, "colour", 3, "count", collectIdx);
+            Audio.Play(CollectSFX, Position, "colour", 3, "count", collectIdx);
             Input.Rumble(RumbleStrength.Medium, RumbleLength.Medium);
 
             sprite.Play("collect", false, false);
