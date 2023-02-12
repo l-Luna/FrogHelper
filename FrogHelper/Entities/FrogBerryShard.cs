@@ -353,15 +353,20 @@ namespace FrogHelper.Entities {
             ILCursor cursor = new ILCursor(ctx);
             cursor.GotoNext(i => i.MatchNewobj<TotalStrawberriesDisplay>());
             cursor.Emit(OpCodes.Ldarg_0);
-            cursor.EmitDelegate<Action<LevelLoader>>(loader => loader.Level.Add(new TotalShardDisplay()));
+            cursor.EmitDelegate<Action<LevelLoader>>(loader => {
+                //This is a bit ugly but eh, who cares
+                if(loader.Level.Session.Area.LevelSet.StartsWith("FrogelineProject2021")) loader.Level.Add(new TotalShardDisplay());
+            });
         }
 
         private static void DrawLerpHook(ILContext ctx) {
             ILCursor cursor = new ILCursor(ctx);
-            while(cursor.TryGotoNext(i => i.MatchStfld(typeof(TotalShardDisplay), nameof(TotalShardDisplay.DrawLerp)))) {
+            while(cursor.TryGotoNext(i => i.MatchStfld(typeof(TotalStrawberriesDisplay), nameof(TotalStrawberriesDisplay.DrawLerp)))) {
                 cursor.Emit(OpCodes.Dup);
                 cursor.Emit(OpCodes.Ldarg_0);
-                cursor.EmitDelegate<Action<float, Level>>((lerp, lvl) => lvl.Tracker.GetEntity<TotalShardDisplay>().DrawLerp = lerp);
+                cursor.EmitDelegate<Action<float, Level>>((lerp, lvl) => {
+                    if(lvl.Tracker.GetEntity<TotalShardDisplay>() is TotalShardDisplay display) display.DrawLerp = lerp;
+                });
                 cursor.Index++;
             }
         }
