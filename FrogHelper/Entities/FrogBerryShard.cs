@@ -86,6 +86,7 @@ namespace FrogHelper.Entities {
         }
 
         //Modified vanilla code
+        [Tracked]
         private class TotalShardDisplay : Entity {
             private const float LerpInSpeed = 1.2f, LerpOutSpeed = 2f;
             private const float NumberUpdateDelay = 0.4f, ComboUpdateDelay = 0.3f;
