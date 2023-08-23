@@ -329,6 +329,8 @@ namespace FrogHelper.Entities {
                     cursor.EmitDelegate<Action<HashSet<EntityID>, EntityID, Strawberry>>((set, id, berry) => {
                         if(set != berry.SceneAs<Level>()?.Session.Strawberries) set.Add(id);
                     });
+                    // we are on the FrogBerryShard path and we are missing the return value from HashSet<EntityID> to pop, insert a dummy value.
+                    cursor.Emit(OpCodes.Ldc_I4_0);
 
                     cursor.MarkLabel(endLabel);
                 }
