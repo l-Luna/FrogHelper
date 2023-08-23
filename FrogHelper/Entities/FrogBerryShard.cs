@@ -320,7 +320,9 @@ namespace FrogHelper.Entities {
                     cursor.Emit(OpCodes.Brtrue, shardLabel);
 
                     //If no: execute regular code, then go to end
-                    cursor.Index++;
+                    // we want to jump over the callvirt and the pop
+                    cursor.Index += 2;
+
                     cursor.Emit(OpCodes.Br, endLabel);
 
                     //If yes: check passed set, and only add if it's not the strawberry one
@@ -329,8 +331,6 @@ namespace FrogHelper.Entities {
                     cursor.EmitDelegate<Action<HashSet<EntityID>, EntityID, Strawberry>>((set, id, berry) => {
                         if(set != berry.SceneAs<Level>()?.Session.Strawberries) set.Add(id);
                     });
-                    // we are on the FrogBerryShard path and we are missing the return value from HashSet<EntityID> to pop, insert a dummy value.
-                    cursor.Emit(OpCodes.Ldc_I4_0);
 
                     cursor.MarkLabel(endLabel);
                 }
