@@ -320,7 +320,9 @@ namespace FrogHelper.Entities {
                     cursor.Emit(OpCodes.Brtrue, shardLabel);
 
                     //If no: execute regular code, then go to end
-                    cursor.Index++;
+                    // we want to jump over the callvirt and the pop
+                    cursor.Index += 2;
+
                     cursor.Emit(OpCodes.Br, endLabel);
 
                     //If yes: check passed set, and only add if it's not the strawberry one
