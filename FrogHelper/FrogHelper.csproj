@@ -7,26 +7,41 @@
     <LangVersion>8</LangVersion>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <PathMap>$(MSBuildProjectDirectory)=X:\FrogHelper\</PathMap>
+
+    <CelesteGamePath Condition="'$(CELESTEGAMEPATH)' == ''">..\..\..</CelesteGamePath>
+    <CelesteGamePath Condition="Exists('$(CELESTEGAMEPATH)\Celeste.dll')">$(CELESTEGAMEPATH)\legacyRef</CelesteGamePath>
   </PropertyGroup>
 
-  <!--Disable "Copy Local" for all references-->
   <ItemDefinitionGroup>
-    <PackageReference ExcludeAssets="runtime" PrivateAssets="all" />
+    <PackageReference PrivateAssets="all" ExcludeAssets="runtime" />
     <Reference Private="false" />
   </ItemDefinitionGroup>
 
   <ItemGroup>
-    <PackageReference Include="MonoMod" Version="21.4.2.3" />
-    <PackageReference Include="MonoMod.RuntimeDetour" Version="21.01.11.01">
-      <IncludeAssets>compile; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
+    <PackageReference Include="MonoMod" Version="22.5.1.1" />
+    <PackageReference Include="MonoMod.RuntimeDetour" Version="22.5.1.1" />
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="Celeste" HintPath="..\..\..\Celeste.exe" />
-    <Reference Include="MMHOOK_Celeste" HintPath="..\..\..\MMHOOK_Celeste.dll" />
-    <Reference Include="FNA" HintPath="..\..\..\FNA.dll" />
-    <Reference Include="YamlDotNet" HintPath="..\..\..\YamlDotNet.dll" />
+      <Reference Include="Celeste" HintPath="$(CELESTEGAMEPATH)\Celeste.exe" />
+      <Reference Include="MMHOOK_Celeste" HintPath="$(CELESTEGAMEPATH)\MMHOOK_Celeste.dll" />
+      <Reference Include="YamlDotNet" HintPath="$(CELESTEGAMEPATH)\YamlDotNet.dll" />
   </ItemGroup>
+
+  <Choose>
+    <When Condition="'$(OS)' != 'Windows_NT' Or Exists('$(CELESTEGAMEPATH)\FNA.dll')">
+      <ItemGroup>
+        <Reference Include="FNA" HintPath="$(CELESTEGAMEPATH)\FNA.dll" />
+      </ItemGroup>
+    </When>
+
+    <Otherwise>
+      <ItemGroup>
+        <Reference Include="Microsoft.Xna.Framework" HintPath="$(WINDIR)\Microsoft.NET\assembly\GAC_32\Microsoft.Xna.Framework\v4.0_4.0.0.0__842cf8be1de50553\Microsoft.Xna.Framework.dll" />
+        <Reference Include="Microsoft.Xna.Framework.Game" HintPath="$(WINDIR)\Microsoft.NET\assembly\GAC_32\Microsoft.Xna.Framework.Game\v4.0_4.0.0.0__842cf8be1de50553\Microsoft.Xna.Framework.Game.dll" />
+        <Reference Include="Microsoft.Xna.Framework.Graphics" HintPath="$(WINDIR)\Microsoft.NET\assembly\GAC_32\Microsoft.Xna.Framework.Graphics\v4.0_4.0.0.0__842cf8be1de50553\Microsoft.Xna.Framework.Graphics.dll" />
+      </ItemGroup>
+    </Otherwise>
+  </Choose>
 
 </Project>
